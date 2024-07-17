@@ -13,6 +13,6 @@ export default class CtInput extends LightningElement {
         // Dispatches the event.
         this.dispatchEvent(selectedEvent);
 
-        console.log('event dispatched with ' + JSON.stringify(data));
+        // console.log('event dispatched with ' + JSON.stringify(data));
     }
 }
