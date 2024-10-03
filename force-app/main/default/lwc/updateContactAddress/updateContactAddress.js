@@ -1,7 +1,7 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import getAddr from '@salesforce/apex/ContactAddressController.getAddress';
 import updateAddr from '@salesforce/apex/ContactAddressController.updateAddress';
-import updateAddrAfterValidation from '@salesforce/apex/ContactAddressController.updateAddressAfterValidation';
+import updateAddrAfterValidation from '@salesforce/apexContinuation/ContactAddressController.updateAddressAfterValidation';
 
 import { refreshApex } from '@salesforce/apex';
 import { notifyRecordUpdateAvailable } from 'lightning/uiRecordApi';
@@ -60,7 +60,7 @@ export default class UpdateContactAddress extends LightningElement {
     handleStateChange(event) {
         // Handle State change
         this.address['state'] = event.target.value;
-        if(isTypeString(this.address['state'])) {
+        if(!isTypeString(this.address['state'])) {
             this.address['state'] = '';
         }
     }
@@ -74,20 +74,25 @@ export default class UpdateContactAddress extends LightningElement {
         // Verify Street
         this.validateEmpty(this.address['street'], 'handleUpdateAddress');
         // Update Address
-        updateAddr(JSON.stringify(this.address))
+        updateAddr({addrStr: JSON.stringify(this.address)})
             .then(result => {
                 console.log('Update Address Result: ' + result);
+                console.log(JSON.stringify(this.address));
                 refreshApex(this.address);
-                notifyRecordUpdateAvailable([this.address.id]); // Refresh the Lightning Data Service cache
+                console.log(this.address.id);
+                let ids = [];
+                ids.push(this.address.id);
+                notifyRecordUpdateAvailable(ids); // Refresh the Lightning Data Service cache
             })
             .catch(error => { 
                 console.log('Update Address Error: ' + error);
+                console.log(error);
             });
     }
 
     handleUpdateAddressAfterValidation(event) {
         // Update Address after validation - Continuation
-        updateAddrAfterValidation(JSON.stringify(this.address))
+        updateAddrAfterValidation({addrStr: JSON.stringify(this.address)})
             .then(result => {
                 console.log('Update Address after validation Result: ' + result);
                 refreshApex(this.address);

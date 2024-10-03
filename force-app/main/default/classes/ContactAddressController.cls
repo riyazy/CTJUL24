@@ -1,8 +1,8 @@
 public with sharing class ContactAddressController {
     // Function to update Contact
     @AuraEnabled
-    public static void updateAddress(String apexMethodParams) {
-        AddressWrapper aw = (AddressWrapper)JSON.deserialize(apexMethodParams, AddressWrapper.class);
+    public static void updateAddress(String addrStr) {
+        AddressWrapper aw = (AddressWrapper)JSON.deserialize(addrStr, AddressWrapper.class);
 
         if(String.isBlank(aw.id)) {
             throw new AuraHandledException('Contact Id is required.');
@@ -17,14 +17,14 @@ public with sharing class ContactAddressController {
     private static final String ADDRESS_VALIDATION_URL = '<insert your callout URL here>';
 
     // Action method
-    @AuraEnabled(continuation=true cacheable=true)
-    public static Object updateAddressAfterValidation(String apexMethodParams) {
+    @AuraEnabled(continuation=true)
+    public static Object updateAddressAfterValidation(String addrStr) {
         // Create continuation. Argument is timeout in seconds.
         Continuation con = new Continuation(40);
         // Set callback method
         con.continuationMethod='processAddressValidation';
         // Set state
-        con.state = apexMethodParams;
+        con.state = addrStr;
         // Create callout request
         HttpRequest req = new HttpRequest();
         req.setMethod('GET');
@@ -56,6 +56,7 @@ public with sharing class ContactAddressController {
         try {    
             Contact c = [SELECT Id, Name, MailingStreet, MailingCity, MailingState, MailingCountry FROM Contact WHERE Id = :contactId LIMIT 1];
 
+            aw.Id = c.Id;
             aw.Name = c.Name;
             aw.Street = c.MailingStreet;
             aw.City = c.MailingCity;
