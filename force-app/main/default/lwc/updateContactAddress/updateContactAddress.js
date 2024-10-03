@@ -1,8 +1,13 @@
-import { LightningElement, api, wire } from 'lwc';
+import { LightningElement, api, wire, track } from 'lwc';
 import getAddr from '@salesforce/apex/ContactAddressController.getAddress';
+import updateAddr from '@salesforce/apex/ContactAddressController.updateAddress';
+import updateAddrAfterValidation from '@salesforce/apex/ContactAddressController.updateAddressAfterValidation';
 
-import StringUtility from 'c/utility';
-import HospitalUtility from 'c/utility';
+import { refreshApex } from '@salesforce/apex';
+import { notifyRecordUpdateAvailable } from 'lightning/uiRecordApi';
+
+import { isNullOrEmpty, isTypeString } from 'c/utility';
+//import getREMSId from 'c/utilityREMS';
 
 export default class UpdateContactAddress extends LightningElement {
     @api recordId;
@@ -47,8 +52,7 @@ export default class UpdateContactAddress extends LightningElement {
         // Handle City change
         this.address['city'] = event.target.value;
 
-        console.log(StringUtility);
-        if(StringUtility.IsNullOrEmpty(this.address['city'])) {
+        if(isNullOrEmpty(this.address['city'])) {
             this.address['city'] = 'Unknown';
         }
     }
@@ -56,9 +60,9 @@ export default class UpdateContactAddress extends LightningElement {
     handleStateChange(event) {
         // Handle State change
         this.address['state'] = event.target.value;
-
-        console.log(HospitalUtility);
-        this.address['state'] = HospitalUtility.getREMSId();
+        if(isTypeString(this.address['state'])) {
+            this.address['state'] = '';
+        }
     }
 
     handleCountryChange(event) {
@@ -70,6 +74,27 @@ export default class UpdateContactAddress extends LightningElement {
         // Verify Street
         this.validateEmpty(this.address['street'], 'handleUpdateAddress');
         // Update Address
-        console.log('Updating Address');
+        updateAddr(JSON.stringify(this.address))
+            .then(result => {
+                console.log('Update Address Result: ' + result);
+                refreshApex(this.address);
+                notifyRecordUpdateAvailable([this.address.id]); // Refresh the Lightning Data Service cache
+            })
+            .catch(error => { 
+                console.log('Update Address Error: ' + error);
+            });
+    }
+
+    handleUpdateAddressAfterValidation(event) {
+        // Update Address after validation - Continuation
+        updateAddrAfterValidation(JSON.stringify(this.address))
+            .then(result => {
+                console.log('Update Address after validation Result: ' + result);
+                refreshApex(this.address);
+                notifyRecordUpdateAvailable([this.address.id]); // Refresh the Lightning Data Service cache
+            })
+            .catch(error => { 
+                console.log('Update Address Error: ' + error);
+            });
     }
 }

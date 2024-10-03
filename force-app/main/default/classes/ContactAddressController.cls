@@ -1,10 +1,51 @@
 public with sharing class ContactAddressController {
     // Function to update Contact
     @AuraEnabled
-    public static AddressWrapper updateAddress(String apexMethodParams) {
-        AddressWrapper aw = new AddressWrapper();
+    public static void updateAddress(String apexMethodParams) {
+        AddressWrapper aw = (AddressWrapper)JSON.deserialize(apexMethodParams, AddressWrapper.class);
 
-        return aw;
+        if(String.isBlank(aw.id)) {
+            throw new AuraHandledException('Contact Id is required.');
+        }
+
+        Contact c = new Contact(Id = aw.id, MailingStreet = aw.street, MailingCity = aw.city, MailingState = aw.state, MailingCountry = aw.country);
+        update c;
+
+        return;
+    }
+
+    private static final String ADDRESS_VALIDATION_URL = '<insert your callout URL here>';
+
+    // Action method
+    @AuraEnabled(continuation=true cacheable=true)
+    public static Object updateAddressAfterValidation(String apexMethodParams) {
+        // Create continuation. Argument is timeout in seconds.
+        Continuation con = new Continuation(40);
+        // Set callback method
+        con.continuationMethod='processAddressValidation';
+        // Set state
+        con.state = apexMethodParams;
+        // Create callout request
+        HttpRequest req = new HttpRequest();
+        req.setMethod('GET');
+        req.setEndpoint(ADDRESS_VALIDATION_URL);
+        // Add callout request to continuation
+        con.addHttpRequest(req);
+        // Return the continuation
+        return con;
+    }
+
+    // Callback method
+    @AuraEnabled(cacheable=true)
+    public static Object processAddressValidation(List<String> labels, Object state) {
+        // Get the response by using the unique label
+        HttpResponse response = Continuation.getResponse(labels[0]);
+        // Set the result variable
+        String result = response.getBody();
+
+        updateAddress((String)state);
+
+        return result;
     }
 
     // Function to update Contact
@@ -28,6 +69,9 @@ public with sharing class ContactAddressController {
 
     // Wrapper for Address
     public class AddressWrapper {
+        @auraEnabled
+        public String id;
+
         @AuraEnabled
         public String name;
 
