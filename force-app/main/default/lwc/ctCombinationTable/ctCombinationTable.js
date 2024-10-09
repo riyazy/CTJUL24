@@ -1,6 +1,7 @@
-import { LightningElement, api } from 'lwc';
-const columns = [
+import { LightningElement, api, track } from 'lwc';
+const COLUMNS = [
     { label: 'Label', fieldName: 'name' },
+    { label: 'Key', fieldName: 'key' }
 ];
 
 export default class CtCombinationTable extends LightningElement {
@@ -9,7 +10,8 @@ export default class CtCombinationTable extends LightningElement {
     // Input size of the characters to control the processing
     @api inpSize = 1;
 
-    data = [];
+    @track data = [];
+    columns = COLUMNS;
 
     constructor() {
         super();
@@ -25,11 +27,13 @@ export default class CtCombinationTable extends LightningElement {
         console.log('inside CtCombinationTable renderedCallback');
         console.table(this.inpList);
         
-        if(this.inpList != null && this.inpList.length == this.inpSize) {
+        if(this.data.length == 0 && this.inpList != null && this.inpList.length == this.inpSize) {
             // do the combination
             console.log('getPermutation to work');
             const outputList = this.getPermutation(this.inpList);
+            this.data = outputList.map((val, index) => { return { key: index, name: val }; });
             console.log('outputList ' + JSON.stringify(outputList));
+            console.log('data ' + JSON.stringify(this.data));
         }
     }
 
@@ -48,16 +52,28 @@ export default class CtCombinationTable extends LightningElement {
         // NV
         // AV
         // AN 
+        
         for(var i = 0; i < inputList.length; i++) {
-            const revInput = inputList.splice(i, 1);
-            console.log(JSON.stringify(revInput));
-            const outputListwithFirstCharacter = this.getPermutation(revInput);
+            console.log(i + ' & ' + inputList.at(i));
+            const tempInput = [...inputList];
+            tempInput.splice(i, 1);
+            console.log(JSON.stringify(tempInput));
+            const tempOutput = this.getPermutation(tempInput);
             
             // output
-            console.log(JSON.stringify(outputListwithFirstCharacter));
+            console.log('output of getPermutation ' + JSON.stringify(tempOutput));
 
-            outputList = [...outputList, ...outputListwithFirstCharacter];
+            tempOutput.forEach(
+                (value, key, map) => {
+                    console.log('joining ' + inputList.at(i) + value);
+                    outputList.push(inputList.at(i) + value);
+                    console.log(JSON.stringify(outputList));
+                }
+            ) 
         }
+
+        // output
+        console.log('before exit from the function' + JSON.stringify(outputList));
 
         // output
         return outputList;
