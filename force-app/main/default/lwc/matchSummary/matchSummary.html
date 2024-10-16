@@ -1,0 +1,7 @@
+<template>
+    <template if:true={matchData.recordData}>
+        <lightning-textarea label="Match ID" value={matchData.recordData.Name}></lightning-textarea>
+    </template>
+
+    <lightning-textarea label="Match Data from Publisher" value={matchDataText}></lightning-textarea>
+</template>
