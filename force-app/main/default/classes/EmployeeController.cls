@@ -1,5 +1,6 @@
 public class EmployeeController extends ContactController {
-   public List<Pharmacy_Employees__c> readEmployees(String accountId) {
+    @AuraEnabled
+   public static List<Pharmacy_Employees__c> readEmployees() {
         // SOQL to get current records in the DB
         List<Pharmacy_Employees__c> employeeList = [SELECT Id, Name, Employee_Name__c, Mobile_Number__c, Email_Address__c, Pharmacy__c, Is_Education_Certificate_Uploaded__c FROM Pharmacy_Employees__c];
         
@@ -11,7 +12,7 @@ public class EmployeeController extends ContactController {
             System.debug(pe.get('Employee_Name__c') + '-' + pe.Mobile_Number__c);
         }
        
-       System.debug(employeeList.size());
+        System.debug(employeeList.size());
        
        	return employeeList;
     }
@@ -39,7 +40,7 @@ public class EmployeeController extends ContactController {
     public void updateAllEmployees(Id pharmacyId) {
         List<Pharmacy_Employees__c> updatedList = new List<Pharmacy_Employees__c>();
         // Get the employees
-        for(Pharmacy_Employees__c pe: this.readEmployees(pharmacyId)) {
+        for(Pharmacy_Employees__c pe: readEmployees()) {
             System.debug(JSON.serialize(pe));
             pe.Email_Address__c = 'info@rangerinc.co';
             updatedList.add(pe);
@@ -66,6 +67,4 @@ public class EmployeeController extends ContactController {
             }
         }
     }
-    
-    
 }
