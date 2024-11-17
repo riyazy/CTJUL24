@@ -1,6 +1,6 @@
 public class EmployeeController extends ContactController {
-    @AuraEnabled
-   public static List<Pharmacy_Employees__c> readEmployees() {
+    @AuraEnabled(cacheable=true)
+    public static List<Pharmacy_Employees__c> readEmployees() {
         // SOQL to get current records in the DB
         List<Pharmacy_Employees__c> employeeList = [SELECT Id, Name, Employee_Name__c, Mobile_Number__c, Email_Address__c, Pharmacy__c, Is_Education_Certificate_Uploaded__c FROM Pharmacy_Employees__c];
         

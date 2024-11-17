@@ -26,6 +26,7 @@ export default class CtCombinationTable extends LightningElement {
     renderedCallback() {
         console.log('inside CtCombinationTable renderedCallback');
         console.table(this.inpList);
+        console.table(this.inpSize);
         
         if(this.data.length == 0 && this.inpList != null && this.inpList.length == this.inpSize) {
             // do the combination
